@@ -88,8 +88,12 @@ class Backend_ooo(implicit val p: NutCoreConfig) extends NutCoreModule with HasR
   rob.io.cdb <> cdb
   rob.io.mispredictRec := mispredictRec
   rob.io.flush := flushBackend
-  when (rob.io.wb(0).rfWen) { rf.write(rob.io.wb(0).rfDest, rob.io.wb(0).rfData) }
-  when (rob.io.wb(1).rfWen) { rf.write(rob.io.wb(1).rfDest, rob.io.wb(1).rfData) }
+  when (rob.io.wb(0).rfWen&&rob.io.wb(1).rfWen&&(rob.io.wb(1).rfDest===rob.io.wb(0).rfDest)) { 
+    rf.write(rob.io.wb(1).rfDest, rob.io.wb(1).rfData) 
+  }.otherwise{
+    when (rob.io.wb(0).rfWen) { rf.write(rob.io.wb(0).rfDest, rob.io.wb(0).rfData) }
+    when (rob.io.wb(1).rfWen) { rf.write(rob.io.wb(1).rfDest, rob.io.wb(1).rfData) }
+  }
   List.tabulate(DispatchWidth)(i => {
     rob.io.in(i).valid := io.in(i).valid && instCango(i)
     io.in(i).ready := rob.io.in(i).ready && instCango(i)
